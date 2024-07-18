@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/userservice")
 public class UserController {
 
 	@GetMapping("/status")
