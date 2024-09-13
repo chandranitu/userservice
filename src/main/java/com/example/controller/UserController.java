@@ -1,4 +1,4 @@
-package com.example.demo;
+package com.example.controller;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +14,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.model.User;
+import com.example.repository.UserRepository;
+import com.example.service.UserService;
+
 @RestController
 @RequestMapping("/userservice")
 public class UserController {
@@ -21,12 +25,15 @@ public class UserController {
 	@Autowired
 	private UserRepository userRepository;
 
+	@Autowired
+	private UserService userService;
+
 	@GetMapping("/status")
 	public String status() {
 		return "user Service is up and running!";
 	}
 
-	//private Map<String, String> dataStore = new HashMap<>();
+	// private Map<String, String> dataStore = new HashMap<>();
 
 	@GetMapping("/data")
 	public ResponseEntity<List<User>> getData() {
@@ -35,23 +42,18 @@ public class UserController {
 	}
 
 	@PostMapping("/data")
-	public ResponseEntity<String> createData(@RequestParam String key, @RequestParam String value) {
-		User user = new User(key, value);
-		userRepository.save(user);
-		return new ResponseEntity<>("Data Saved", HttpStatus.CREATED);
+	public ResponseEntity<User> createData(@RequestParam String key, @RequestParam String value,
+			@RequestParam List<String> roles) {
+		User user = userService.createUser(key, value, roles);
+		return new ResponseEntity<>(user, HttpStatus.CREATED);
 	}
 
 	@PutMapping("/data")
-	public ResponseEntity<String> updateData(@RequestParam String key, @RequestParam String value) {
-		Optional<User> existingUser = userRepository.findByKey(key);
-		if (existingUser.isPresent()) {
-			User user = existingUser.get();
-			user.setValue(value);
-			userRepository.save(user);
-			return new ResponseEntity<>("Data updated", HttpStatus.OK);
-		} else {
-			return new ResponseEntity<>("Key not found", HttpStatus.NOT_FOUND);
-		}
+	public ResponseEntity<String> updateData(@RequestParam String key, @RequestParam String value,
+			@RequestParam String role) {
+		Optional<User> updatedUser = userService.updateUser(key, value, role);
+		return updatedUser.isPresent() ? new ResponseEntity<>("Data updated", HttpStatus.OK)
+				: new ResponseEntity<>("Key not found", HttpStatus.NOT_FOUND);
 	}
 
 	@DeleteMapping("/data")
@@ -63,6 +65,12 @@ public class UserController {
 		} else {
 			return new ResponseEntity<>("Key not found", HttpStatus.NOT_FOUND);
 		}
+	}
+
+	@GetMapping("/roles")
+	public ResponseEntity<List<String>> getUserRoles(@RequestParam String key) {
+		List<String> roles = userService.getUserRoles(key);
+		return new ResponseEntity<>(roles, HttpStatus.OK);
 	}
 
 //    public ResponseEntity<String> getUser(@PathVariable String userId) {
